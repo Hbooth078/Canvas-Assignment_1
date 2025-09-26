@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>H. Booth Animation 1</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background: #f0f0f0;
+    }
+    header {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    canvas {
+      border: 2px solid black;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- (f) Your name in the header -->
+  <header>H. Booth — Animation 1</header>
+  
+  <!-- (b) Canvas centered on page -->
+  <canvas id="myCanvas" width="500" height="300"></canvas>
+
+  <script>
+    const canvas = document.getElementById("myCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // (a,c) Object 1: Red, larger
+    let ball1 = { x: 50, y: 50, dx: 2, dy: 2, radius: 30, color: "red" };
+
+    // (a,c) Object 2: Green, smaller
+    let ball2 = { x: 200, y: 150, dx: 0, dy: 3, radius: 15, color: "green" };
+
+    function drawBall(ball) {
+      ctx.beginPath();
+      ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+      ctx.fillStyle = ball.color;
+      ctx.fill();
+      ctx.closePath();
+    }
+
+    function updateBall(ball) {
+      ball.x += ball.dx;
+      ball.y += ball.dy;
+
+      // Bounce on edges
+      if(ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+        ball.dx *= -1;
+      }
+      if(ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+        ball.dy *= -1;
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBall(ball1);
+      drawBall(ball2);
+      updateBall(ball1);
+      updateBall(ball2);
+    }
+
+    setInterval(draw, 20);
+  </script>
+</body>
+</html>
