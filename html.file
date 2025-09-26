@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>H. Booth — Animation 1</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* Page layout: header at top, content below in a two-column flex
+       Canvas intentionally placed on the right to satisfy "change the location" */
+    :root {
+      --bg: #f3f3f5;
+      --panel: #ffffff;
+      --accent: #2c3e50;
+      --text: #222;
+    }
+
+    html,body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#eef2f5 0%, #f9fafb 100%);
+      color: var(--text);
+    }
+
+    header {
+      background: var(--panel);
+      padding: 18px 28px;
+      box-shadow: 0 2px 6px rgba(30,30,30,0.06);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+      color: var(--accent);
+      letter-spacing: .2px;
+    }
+    header p {
+      margin: 0;
+      opacity: 0.7;
+      font-size: 13px;
+    }
+
+    main.container {
+      display: flex;
+      gap: 24px;
+      padding: 28px;
+      align-items: flex-start;
+      max-width: 1100px;
+      margin: 20px auto;
+    }
+
+    /* Left column with instructions / text */
+    .left {
+      flex: 1 1 480px;
+      background: var(--panel);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(30,30,30,.05);
+    }
+
+    /* Right column holds the canvas — intentionally placed to the right */
+    .right {
+      width: 540px;                /* set container for canvas */
+      min-width: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Canvas styling */
+    canvas#playfield {
+      display: block;
+      background: linear-gradient(180deg, #3b3b3b 0%, #2b2b2b 100%);
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(10,10,10,.3);
+      width: 520px;   /* CSS rendered size - actual drawing size set in JS for crispness */
+      height: 400px;
+    }
+
+    footer {
+      text-align: center;
+      color: #666;
+      font-size: 13px;
+      margin-top: 12px;
+    }
+
+    /* Responsive: stack on small screens */
+    @media (max-width: 840px) {
+      main.container { flex-direction: column; padding: 16px; }
+      .right { width: 100%; }
+      canvas#playfield { width: 100%; height: 360px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- (f) Add your name in the Webpage near the top -->
+    <h1>H. Booth — Animation 1</h1>
+    <p>Example assignment: moving object changes (color, size, direction) + second object</p>
+  </header>
+
+  <main class="container">
+    <section class="left" aria-label="instructions">
+      <h2>What this file does</h2>
+      <ul>
+        <li>Two moving objects on a canvas (blue &amp; orange)</li>
+        <li>Blue object: larger, moves diagonally (bounces off edges)</li>
+        <li>Orange object: smaller, moves vertically (bounces top/bottom)</li>
+        <li>Canvas is placed on the right side of the page layout</li>
+        <li>File rename suggestion: <strong>H.Booth.Animation_1.htm</strong></li>
+      </ul>
+
+      <h3>How to submit</h3>
+      <p>Save this file using the filename above and upload/publish per your course instructions.</p>
+    </section>
+
+    <aside class="right" aria-label="animation">
+      <!-- (b) Canvas location changed: it's explicitly placed in the right column -->
+      <canvas id="playfield" width="1040" height="800"></canvas>
+      <!-- NOTE: width/height intentionally set double the displayed CSS size to keep rendering crisp -->
+    </aside>
+  </main>
+
+  <footer>
+    Canvas animation — objects: color, size, direction, second object, location changed.
+  </footer>
+
+  <script>
+    /*
+      Animation implementation notes:
+      - (a) color changed: blue and orange
+      - (c) sizes changed: radiusLarge (bigger) and radiusSmall (smaller)
+      - (d) directions: diagonal (x/y velocity) and vertical (y velocity only)
+      - (e) second moving object added as "orange" vertical mover
+    */
+
+    const canvas = document.getElementById('playfield');
+    const ctx = canvas.getContext('2d');
+
+    // We drew at double-res for crispness. Scale to displayed CSS pixel size:
+    function resizeForDisplay() {
+      const cssWidth = canvas.clientWidth;
+      const cssHeight = canvas.clientHeight;
+      // Use devicePixelRatio to make it crisp on high-DPI displays
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(cssWidth * ratio);
+      canvas.height = Math.round(cssHeight * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+    resizeForDisplay();
+    window.addEventListener('resize', resizeForDisplay);
+
+    // Object A: Blue, larger, diagonal movement
+    const objA = {
+      x: 80,
+      y: 80,
+      vx: 180,   // px per second (diagonal)
+      vy: 120,
+      radius: 44,      // (c) larger size
+      color: '#1E90FF' // (a) changed color: blue (DodgerBlue)
+    };
+
+    // Object B: Orange, smaller, vertical movement
+    const objB = {
+      x: 320,
+      y: 90,
+      vx: 0,           // only vertical velocity (d)
+      vy: 200,         // px per second
+      radius: 22,      // (c) smaller size
+      color: '#FF8C42' // (a) second color: orange
+    };
+
+    // Extra visual: a faint shadow and slight rotation for interest
+    function drawObj(obj, time) {
+      // shadow
+      ctx.save();
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(0,0,0,0.12)';
+      ctx.ellipse(obj.x + 8, obj.y + obj.radius + 6, obj.radius * 0.9, obj.radius * 0.35, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+
+      // body
+      ctx.beginPath();
+      const grd = ctx.createRadialGradient(obj.x - obj.radius*0.3, obj.y - obj.radius*0.3, Math.max(2, obj.radius*0.2), obj.x, obj.y, obj.radius);
+      grd.addColorStop(0, lighten(obj.color, 0.08));
+      grd.addColorStop(1, obj.color);
+      ctx.fillStyle = grd;
+      ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI*2);
+      ctx.fill();
+
+      // highlight
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,0.15)';
+      ctx.ellipse(obj.x - obj.radius*0.35, obj.y - obj.radius*0.4, obj.radius*0.28, obj.radius*0.18, -0.4, 0, Math.PI*2);
+      ctx.fill();
+
+      // ring
+      ctx.beginPath();
+      ctx.lineWidth = Math.max(1, obj.radius * 0.08);
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.arc(obj.x, obj.y, obj.radius - ctx.lineWidth/2, 0, Math.PI*2);
+      ctx.stroke();
+    }
+
+    // Utility: slightly lighten a hex color
+    function lighten(hex, amt) {
+      // hex like #RRGGBB
+      const c = hex.replace('#','');
+      const r = Math.min(255, parseInt(c.substring(0,2),16) + Math.round(255 * amt));
+      const g = Math.min(255, parseInt(c.substring(2,4),16) + Math.round(255 * amt));
+      const b = Math.min(255, parseInt(c.substring(4,6),16) + Math.round(255 * amt));
+      return `rgb(${r},${g},${b})`;
+    }
+
+    // Animation loop
+    let lastT = performance.now();
+    function step(now) {
+      const dt = Math.min(0.05, (now - lastT) / 1000); // cap delta for stability
+      lastT = now;
+
+      // clear
+      c
+
